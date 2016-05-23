@@ -20,13 +20,17 @@ import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.ToJson;
+
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -38,117 +42,128 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class MoshiConverterFactoryTest {
-  interface AnInterface {
-    String getName();
-  }
-
-  static class AnImplementation implements AnInterface {
-    private final String theName;
-
-    AnImplementation(String name) {
-      theName = name;
+    interface AnInterface {
+        String getName();
     }
 
-    @Override public String getName() {
-      return theName;
-    }
-  }
+    static class AnImplementation implements AnInterface {
+        private final String theName;
 
-  static class AnInterfaceAdapter {
-    @ToJson public void write(JsonWriter jsonWriter, AnInterface anInterface) throws IOException {
-      jsonWriter.beginObject();
-      jsonWriter.name("name").value(anInterface.getName());
-      jsonWriter.endObject();
-    }
-
-    @FromJson public AnInterface read(JsonReader jsonReader) throws IOException {
-      jsonReader.beginObject();
-
-      String name = null;
-      while (jsonReader.hasNext()) {
-        switch (jsonReader.nextName()) {
-          case "name":
-            name = jsonReader.nextString();
-            break;
+        AnImplementation(String name) {
+            theName = name;
         }
-      }
 
-      jsonReader.endObject();
-      return new AnImplementation(name);
-    }
-  }
-
-  interface Service {
-    @POST("/") Call<AnImplementation> anImplementation(@Body AnImplementation impl);
-    @POST("/") Call<AnInterface> anInterface(@Body AnInterface impl);
-  }
-
-  @Rule public final MockWebServer server = new MockWebServer();
-
-  private Service service;
-  private Service serviceLenient;
-
-  @Before public void setUp() {
-    Moshi moshi = new Moshi.Builder()
-        .add(new AnInterfaceAdapter())
-        .build();
-    MoshiConverterFactory factory = MoshiConverterFactory.create(moshi);
-    MoshiConverterFactory factoryLenient = factory.asLenient();
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(factory)
-        .build();
-    Retrofit retrofitLenient = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(factoryLenient)
-        .build();
-    service = retrofit.create(Service.class);
-    serviceLenient = retrofitLenient.create(Service.class);
-  }
-
-  @Test public void anInterface() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody("{\"name\":\"value\"}"));
-
-    Call<AnInterface> call = service.anInterface(new AnImplementation("value"));
-    Response<AnInterface> response = call.execute();
-    AnInterface body = response.body();
-    assertThat(body.getName()).isEqualTo("value");
-
-    RecordedRequest request = server.takeRequest();
-    assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
-    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
-  }
-
-  @Test public void anImplementation() throws IOException, InterruptedException {
-    server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
-
-    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
-    Response<AnImplementation> response = call.execute();
-    AnImplementation body = response.body();
-    assertThat(body.theName).isEqualTo("value");
-
-    RecordedRequest request = server.takeRequest();
-    assertThat(request.getBody().readUtf8()).isEqualTo("{\"theName\":\"value\"}");
-    assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
-  }
-
-  @Test public void asLenient() throws IOException, InterruptedException {
-    MockResponse malformedResponse = new MockResponse().setBody("{\"theName\":value}");
-    server.enqueue(malformedResponse);
-    server.enqueue(malformedResponse);
-
-    Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
-    try {
-      call.execute();
-      fail();
-    } catch (IOException e) {
-      assertEquals(e.getMessage(),
-          "Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
+        @Override
+        public String getName() {
+            return theName;
+        }
     }
 
-    Call<AnImplementation> call2 = serviceLenient.anImplementation(new AnImplementation("value"));
-    Response<AnImplementation> response = call2.execute();
-    AnImplementation body = response.body();
-    assertThat(body.theName).isEqualTo("value");
-  }
+    static class AnInterfaceAdapter {
+        @ToJson
+        public void write(JsonWriter jsonWriter, AnInterface anInterface) throws IOException {
+            jsonWriter.beginObject();
+            jsonWriter.name("name").value(anInterface.getName());
+            jsonWriter.endObject();
+        }
+
+        @FromJson
+        public AnInterface read(JsonReader jsonReader) throws IOException {
+            jsonReader.beginObject();
+
+            String name = null;
+            while (jsonReader.hasNext()) {
+                switch (jsonReader.nextName()) {
+                    case "name":
+                        name = jsonReader.nextString();
+                        break;
+                }
+            }
+
+            jsonReader.endObject();
+            return new AnImplementation(name);
+        }
+    }
+
+    interface Service {
+        @POST("/")
+        Call<AnImplementation> anImplementation(@Body AnImplementation impl);
+
+        @POST("/")
+        Call<AnInterface> anInterface(@Body AnInterface impl);
+    }
+
+    @Rule
+    public final MockWebServer server = new MockWebServer();
+
+    private Service service;
+    private Service serviceLenient;
+
+    @Before
+    public void setUp() {
+        Moshi moshi = new Moshi.Builder()
+                .add(new AnInterfaceAdapter())
+                .build();
+        MoshiConverterFactory factory = MoshiConverterFactory.create(moshi);
+        MoshiConverterFactory factoryLenient = factory.asLenient();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addConverterFactory(factory)
+                .build();
+        Retrofit retrofitLenient = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addConverterFactory(factoryLenient)
+                .build();
+        service = retrofit.create(Service.class);
+        serviceLenient = retrofitLenient.create(Service.class);
+    }
+
+    @Test
+    public void anInterface() throws IOException, InterruptedException {
+        server.enqueue(new MockResponse().setBody("{\"name\":\"value\"}"));
+
+        Call<AnInterface> call = service.anInterface(new AnImplementation("value"));
+        Response<AnInterface> response = call.execute();
+        AnInterface body = response.body();
+        assertThat(body.getName()).isEqualTo("value");
+
+        RecordedRequest request = server.takeRequest();
+        assertThat(request.getBody().readUtf8()).isEqualTo("{\"name\":\"value\"}");
+        assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+    }
+
+    @Test
+    public void anImplementation() throws IOException, InterruptedException {
+        server.enqueue(new MockResponse().setBody("{\"theName\":\"value\"}"));
+
+        Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+        Response<AnImplementation> response = call.execute();
+        AnImplementation body = response.body();
+        assertThat(body.theName).isEqualTo("value");
+
+        RecordedRequest request = server.takeRequest();
+        assertThat(request.getBody().readUtf8()).isEqualTo("{\"theName\":\"value\"}");
+        assertThat(request.getHeader("Content-Type")).isEqualTo("application/json; charset=UTF-8");
+    }
+
+    @Test
+    public void asLenient() throws IOException, InterruptedException {
+        MockResponse malformedResponse = new MockResponse().setBody("{\"theName\":value}");
+        server.enqueue(malformedResponse);
+        server.enqueue(malformedResponse);
+
+        Call<AnImplementation> call = service.anImplementation(new AnImplementation("value"));
+        try {
+            call.execute();
+            fail();
+        } catch (IOException e) {
+            assertEquals(e.getMessage(),
+                    "Use JsonReader.setLenient(true) to accept malformed JSON at path $.theName");
+        }
+
+        Call<AnImplementation> call2 = serviceLenient.anImplementation(new AnImplementation("value"));
+        Response<AnImplementation> response = call2.execute();
+        AnImplementation body = response.body();
+        assertThat(body.theName).isEqualTo("value");
+    }
 }

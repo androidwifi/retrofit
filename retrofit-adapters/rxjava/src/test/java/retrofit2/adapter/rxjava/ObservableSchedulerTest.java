@@ -17,9 +17,11 @@ package retrofit2.adapter.rxjava;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
@@ -28,62 +30,72 @@ import rx.observers.TestSubscriber;
 import rx.schedulers.TestScheduler;
 
 public final class ObservableSchedulerTest {
-  @Rule public final MockWebServer server = new MockWebServer();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
 
-  interface Service {
-    @GET("/") Observable<String> body();
-    @GET("/") Observable<Response<String>> response();
-    @GET("/") Observable<Result<String>> result();
-  }
+    interface Service {
+        @GET("/")
+        Observable<String> body();
 
-  private final TestScheduler scheduler = new TestScheduler();
-  private Service service;
+        @GET("/")
+        Observable<Response<String>> response();
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(scheduler))
-        .build();
-    service = retrofit.create(Service.class);
-  }
+        @GET("/")
+        Observable<Result<String>> result();
+    }
 
-  @Test public void bodyUsesScheduler() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    private final TestScheduler scheduler = new TestScheduler();
+    private Service service;
 
-    TestSubscriber<String> subscriber = new TestSubscriber<>();
-    service.body().subscribe(subscriber);
-    subscriber.assertNoValues();
-    subscriber.assertNoTerminalEvent();
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addConverterFactory(new StringConverterFactory())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.createWithScheduler(scheduler))
+                .build();
+        service = retrofit.create(Service.class);
+    }
 
-    scheduler.triggerActions();
-    subscriber.assertValueCount(1);
-    subscriber.assertCompleted();
-  }
+    @Test
+    public void bodyUsesScheduler() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-  @Test public void responseUsesScheduler() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+        TestSubscriber<String> subscriber = new TestSubscriber<>();
+        service.body().subscribe(subscriber);
+        subscriber.assertNoValues();
+        subscriber.assertNoTerminalEvent();
 
-    TestSubscriber<Response<String>> subscriber = new TestSubscriber<>();
-    service.response().subscribe(subscriber);
-    subscriber.assertNoValues();
-    subscriber.assertNoTerminalEvent();
+        scheduler.triggerActions();
+        subscriber.assertValueCount(1);
+        subscriber.assertCompleted();
+    }
 
-    scheduler.triggerActions();
-    subscriber.assertValueCount(1);
-    subscriber.assertCompleted();
-  }
+    @Test
+    public void responseUsesScheduler() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-  @Test public void resultUsesScheduler() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+        TestSubscriber<Response<String>> subscriber = new TestSubscriber<>();
+        service.response().subscribe(subscriber);
+        subscriber.assertNoValues();
+        subscriber.assertNoTerminalEvent();
 
-    TestSubscriber<Result<String>> subscriber = new TestSubscriber<>();
-    service.result().subscribe(subscriber);
-    subscriber.assertNoValues();
-    subscriber.assertNoTerminalEvent();
+        scheduler.triggerActions();
+        subscriber.assertValueCount(1);
+        subscriber.assertCompleted();
+    }
 
-    scheduler.triggerActions();
-    subscriber.assertValueCount(1);
-    subscriber.assertCompleted();
-  }
+    @Test
+    public void resultUsesScheduler() {
+        server.enqueue(new MockResponse().setBody("Hi"));
+
+        TestSubscriber<Result<String>> subscriber = new TestSubscriber<>();
+        service.result().subscribe(subscriber);
+        subscriber.assertNoValues();
+        subscriber.assertNoTerminalEvent();
+
+        scheduler.triggerActions();
+        subscriber.assertValueCount(1);
+        subscriber.assertCompleted();
+    }
 }

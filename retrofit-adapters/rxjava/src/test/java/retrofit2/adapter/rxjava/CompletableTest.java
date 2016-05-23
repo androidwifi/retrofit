@@ -16,11 +16,14 @@
 package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
 import rx.Completable;
@@ -30,47 +33,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class CompletableTest {
-  @Rule public final MockWebServer server = new MockWebServer();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
 
-  interface Service {
-    @GET("/") Completable completable();
-  }
-
-  private Service service;
-
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-        .build();
-    service = retrofit.create(Service.class);
-  }
-
-  @Test public void completableSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
-    service.completable().await();
-  }
-
-  @Test public void completableSuccess404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
-
-    try {
-      service.completable().await();
-      fail();
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
+    interface Service {
+        @GET("/")
+        Completable completable();
     }
-  }
 
-  @Test public void completableFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    private Service service;
 
-    try {
-      service.completable().await();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .build();
+        service = retrofit.create(Service.class);
     }
-  }
+
+    @Test
+    public void completableSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
+        service.completable().await();
+    }
+
+    @Test
+    public void completableSuccess404() {
+        server.enqueue(new MockResponse().setResponseCode(404));
+
+        try {
+            service.completable().await();
+            fail();
+        } catch (RuntimeException e) {
+            Throwable cause = e.getCause();
+            assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
+        }
+    }
+
+    @Test
+    public void completableFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+        try {
+            service.completable().await();
+            fail();
+        } catch (RuntimeException e) {
+            assertThat(e.getCause()).isInstanceOf(IOException.class);
+        }
+    }
 }

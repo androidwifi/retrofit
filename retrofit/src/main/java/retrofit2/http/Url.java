@@ -18,6 +18,7 @@ package retrofit2.http;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
 import okhttp3.HttpUrl;
 import retrofit2.Retrofit;
 
@@ -30,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;GET
  * Call&lt;ResponseBody&gt; list(@Url String url);
  * </code></pre>
- * <p>
+ * <p/>
  * See {@linkplain retrofit2.Retrofit.Builder#baseUrl(HttpUrl) base URL} for details of how
  * the value will be resolved against a base URL to create the full endpoint URL.
  */

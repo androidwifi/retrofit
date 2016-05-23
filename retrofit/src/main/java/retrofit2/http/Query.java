@@ -24,25 +24,25 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter appended to the URL.
- * <p>
+ * <p/>
  * Values are converted to strings using {@link String#valueOf(Object)} and then URL encoded.
  * {@code null} values are ignored. Passing a {@link java.util.List List} or array will result in a
  * query parameter for each non-{@code null} item.
- * <p>
+ * <p/>
  * Simple Example:
  * <pre><code>
  * &#64;GET("/list")
  * Call&lt;ResponseBody&gt; list(@Query("page") int page);
  * </code></pre>
  * Calling with {@code foo.list(1)} yields {@code /list?page=1}.
- * <p>
+ * <p/>
  * Example with {@code null}:
  * <pre><code>
  * &#64;GET("/list")
  * Call&lt;ResponseBody&gt; list(@Query("category") String category);
  * </code></pre>
  * Calling with {@code foo.list(null)} yields {@code /list}.
- * <p>
+ * <p/>
  * Array/Varargs Example:
  * <pre><code>
  * &#64;GET("/list")
@@ -50,7 +50,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </code></pre>
  * Calling with {@code foo.list("bar", "baz")} yields
  * {@code /list?category=bar&category=baz}.
- * <p>
+ * <p/>
  * Parameter names and values are URL encoded by default. Specify {@link #encoded() encoded=true}
  * to change this behavior.
  * <pre><code>
@@ -65,11 +65,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface Query {
-  /** The query parameter name. */
-  String value();
+    /**
+     * The query parameter name.
+     */
+    String value();
 
-  /**
-   * Specifies whether the parameter {@linkplain #value() name} and value are already URL encoded.
-   */
-  boolean encoded() default false;
+    /**
+     * Specifies whether the parameter {@linkplain #value() name} and value are already URL encoded.
+     */
+    boolean encoded() default false;
 }

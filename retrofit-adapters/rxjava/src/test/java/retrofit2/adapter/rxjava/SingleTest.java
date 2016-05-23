@@ -16,11 +16,14 @@
 package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
@@ -32,115 +35,131 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class SingleTest {
-  @Rule public final MockWebServer server = new MockWebServer();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
 
-  interface Service {
-    @GET("/") Single<String> body();
-    @GET("/") Single<Response<String>> response();
-    @GET("/") Single<Result<String>> result();
-  }
+    interface Service {
+        @GET("/")
+        Single<String> body();
 
-  private Service service;
+        @GET("/")
+        Single<Response<String>> response();
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-        .build();
-    service = retrofit.create(Service.class);
-  }
-
-  @Test public void bodySuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
-
-    BlockingSingle<String> o = service.body().toBlocking();
-    assertThat(o.value()).isEqualTo("Hi");
-  }
-
-  @Test public void bodySuccess404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
-
-    BlockingSingle<String> o = service.body().toBlocking();
-    try {
-      o.value();
-      fail();
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
+        @GET("/")
+        Single<Result<String>> result();
     }
-  }
 
-  @Test public void bodyFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    private Service service;
 
-    BlockingSingle<String> o = service.body().toBlocking();
-    try {
-      o.value();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addConverterFactory(new StringConverterFactory())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .build();
+        service = retrofit.create(Service.class);
     }
-  }
 
-  @Test public void responseSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void bodySuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingSingle<Response<String>> o = service.response().toBlocking();
-    Response<String> response = o.value();
-    assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isEqualTo("Hi");
-  }
-
-  @Test public void responseSuccess404() throws IOException {
-    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
-
-    BlockingSingle<Response<String>> o = service.response().toBlocking();
-    Response<String> response = o.value();
-    assertThat(response.isSuccessful()).isFalse();
-    assertThat(response.errorBody().string()).isEqualTo("Hi");
-  }
-
-  @Test public void responseFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
-
-    BlockingSingle<Response<String>> o = service.response().toBlocking();
-    try {
-      o.value();
-      fail();
-    } catch (RuntimeException t) {
-      assertThat(t.getCause()).isInstanceOf(IOException.class);
+        BlockingSingle<String> o = service.body().toBlocking();
+        assertThat(o.value()).isEqualTo("Hi");
     }
-  }
 
-  @Test public void resultSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void bodySuccess404() {
+        server.enqueue(new MockResponse().setResponseCode(404));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
-    assertThat(result.isError()).isFalse();
-    Response<String> response = result.response();
-    assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isEqualTo("Hi");
-  }
+        BlockingSingle<String> o = service.body().toBlocking();
+        try {
+            o.value();
+            fail();
+        } catch (RuntimeException e) {
+            Throwable cause = e.getCause();
+            assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
+        }
+    }
 
-  @Test public void resultSuccess404() throws IOException {
-    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+    @Test
+    public void bodyFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
-    assertThat(result.isError()).isFalse();
-    Response<String> response = result.response();
-    assertThat(response.isSuccessful()).isFalse();
-    assertThat(response.errorBody().string()).isEqualTo("Hi");
-  }
+        BlockingSingle<String> o = service.body().toBlocking();
+        try {
+            o.value();
+            fail();
+        } catch (RuntimeException e) {
+            assertThat(e.getCause()).isInstanceOf(IOException.class);
+        }
+    }
 
-  @Test public void resultFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    @Test
+    public void responseSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingSingle<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.value();
-    assertThat(result.isError()).isTrue();
-    assertThat(result.error()).isInstanceOf(IOException.class);
-  }
+        BlockingSingle<Response<String>> o = service.response().toBlocking();
+        Response<String> response = o.value();
+        assertThat(response.isSuccessful()).isTrue();
+        assertThat(response.body()).isEqualTo("Hi");
+    }
+
+    @Test
+    public void responseSuccess404() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+        BlockingSingle<Response<String>> o = service.response().toBlocking();
+        Response<String> response = o.value();
+        assertThat(response.isSuccessful()).isFalse();
+        assertThat(response.errorBody().string()).isEqualTo("Hi");
+    }
+
+    @Test
+    public void responseFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+        BlockingSingle<Response<String>> o = service.response().toBlocking();
+        try {
+            o.value();
+            fail();
+        } catch (RuntimeException t) {
+            assertThat(t.getCause()).isInstanceOf(IOException.class);
+        }
+    }
+
+    @Test
+    public void resultSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
+
+        BlockingSingle<Result<String>> o = service.result().toBlocking();
+        Result<String> result = o.value();
+        assertThat(result.isError()).isFalse();
+        Response<String> response = result.response();
+        assertThat(response.isSuccessful()).isTrue();
+        assertThat(response.body()).isEqualTo("Hi");
+    }
+
+    @Test
+    public void resultSuccess404() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+        BlockingSingle<Result<String>> o = service.result().toBlocking();
+        Result<String> result = o.value();
+        assertThat(result.isError()).isFalse();
+        Response<String> response = result.response();
+        assertThat(response.isSuccessful()).isFalse();
+        assertThat(response.errorBody().string()).isEqualTo("Hi");
+    }
+
+    @Test
+    public void resultFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+        BlockingSingle<Result<String>> o = service.result().toBlocking();
+        Result<String> result = o.value();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.error()).isInstanceOf(IOException.class);
+    }
 }

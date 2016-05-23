@@ -24,7 +24,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Named key/value pairs for a form-encoded request.
- * <p>
+ * <p/>
  * Simple Example:
  * <pre><code>
  * &#64;FormUrlEncoded
@@ -33,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </code></pre>
  * Calling with {@code foo.things(ImmutableMap.of("foo", "bar", "kit", "kat")} yields a request
  * body of {@code foo=bar&kit=kat}.
- * <p>
+ * <p/>
  * A {@code null} value for the map, as a key, or as a value is not allowed.
  *
  * @see FormUrlEncoded
@@ -43,6 +43,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface FieldMap {
-  /** Specifies whether the names and values are already URL encoded. */
-  boolean encoded() default false;
+    /**
+     * Specifies whether the names and values are already URL encoded.
+     */
+    boolean encoded() default false;
 }

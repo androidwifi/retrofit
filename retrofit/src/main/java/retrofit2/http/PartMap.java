@@ -18,6 +18,7 @@ package retrofit2.http;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
 import retrofit2.Converter;
 
 import static java.lang.annotation.ElementType.PARAMETER;
@@ -25,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Denotes name and value parts of a multi-part request.
- * <p>
+ * <p/>
  * Values of the map on which this annotation exists will be processed in one of two ways:
  * <ul>
  * <li>If the type is {@link okhttp3.RequestBody RequestBody} the value will be used
@@ -33,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>Other object types will be converted to an appropriate representation by using
  * {@linkplain Converter a converter}.</li>
  * </ul>
- * <p>
+ * <p/>
  * <pre><code>
  * &#64;Multipart
  * &#64;POST("/upload")
@@ -41,7 +42,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     &#64;Part("file") RequestBody file,
  *     &#64;PartMap Map&lt;String, RequestBody&gt; params);
  * </code></pre>
- * <p>
+ * <p/>
  * A {@code null} value for the map, as a key, or as a value is not allowed.
  *
  * @see Multipart
@@ -51,6 +52,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface PartMap {
-  /** The {@code Content-Transfer-Encoding} of the parts. */
-  String encoding() default "binary";
+    /**
+     * The {@code Content-Transfer-Encoding} of the parts.
+     */
+    String encoding() default "binary";
 }

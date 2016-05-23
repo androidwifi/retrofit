@@ -25,9 +25,9 @@ import java.util.Map;
 
 /**
  * Adds headers specified in the {@link Map}.
- * <p>
+ * <p/>
  * Values are converted to strings using {@link String#valueOf(Object)}.
- * <p>
+ * <p/>
  * Simple Example:
  * <pre>
  * &#64;GET("/search")

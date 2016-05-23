@@ -17,8 +17,10 @@ package retrofit2.converter.moshi;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
@@ -26,54 +28,60 @@ import retrofit2.Retrofit;
 
 /**
  * A {@linkplain Converter.Factory converter} which uses Moshi for JSON.
- * <p>
+ * <p/>
  * Because Moshi is so flexible in the types it supports, this converter assumes that it can handle
  * all types. If you are mixing JSON serialization with something else (such as protocol buffers),
  * you must {@linkplain Retrofit.Builder#addConverterFactory(Converter.Factory) add this instance}
  * last to allow the other converters a chance to see their types.
  */
 public final class MoshiConverterFactory extends Converter.Factory {
-  /** Create an instance using a default {@link Moshi} instance for conversion. */
-  public static MoshiConverterFactory create() {
-    return create(new Moshi.Builder().build());
-  }
-
-  /** Create an instance using {@code moshi} for conversion. */
-  public static MoshiConverterFactory create(Moshi moshi) {
-    return new MoshiConverterFactory(moshi, false);
-  }
-
-  private final Moshi moshi;
-  private final boolean lenient;
-
-  private MoshiConverterFactory(Moshi moshi, boolean lenient) {
-    if (moshi == null) throw new NullPointerException("moshi == null");
-    this.moshi = moshi;
-    this.lenient = lenient;
-  }
-
-  /** Return a new factory which uses {@linkplain JsonAdapter#lenient() lenient} adapters. */
-  public MoshiConverterFactory asLenient() {
-    return new MoshiConverterFactory(moshi, true);
-  }
-
-  @Override
-  public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
-      Retrofit retrofit) {
-    JsonAdapter<?> adapter = moshi.adapter(type);
-    if (lenient) {
-      adapter = adapter.lenient();
+    /**
+     * Create an instance using a default {@link Moshi} instance for conversion.
+     */
+    public static MoshiConverterFactory create() {
+        return create(new Moshi.Builder().build());
     }
-    return new MoshiResponseBodyConverter<>(adapter);
-  }
 
-  @Override
-  public Converter<?, RequestBody> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-    JsonAdapter<?> adapter = moshi.adapter(type);
-    if (lenient) {
-      adapter = adapter.lenient();
+    /**
+     * Create an instance using {@code moshi} for conversion.
+     */
+    public static MoshiConverterFactory create(Moshi moshi) {
+        return new MoshiConverterFactory(moshi, false);
     }
-    return new MoshiRequestBodyConverter<>(adapter);
-  }
+
+    private final Moshi moshi;
+    private final boolean lenient;
+
+    private MoshiConverterFactory(Moshi moshi, boolean lenient) {
+        if (moshi == null) throw new NullPointerException("moshi == null");
+        this.moshi = moshi;
+        this.lenient = lenient;
+    }
+
+    /**
+     * Return a new factory which uses {@linkplain JsonAdapter#lenient() lenient} adapters.
+     */
+    public MoshiConverterFactory asLenient() {
+        return new MoshiConverterFactory(moshi, true);
+    }
+
+    @Override
+    public Converter<ResponseBody, ?> responseBodyConverter(Type type, Annotation[] annotations,
+                                                            Retrofit retrofit) {
+        JsonAdapter<?> adapter = moshi.adapter(type);
+        if (lenient) {
+            adapter = adapter.lenient();
+        }
+        return new MoshiResponseBodyConverter<>(adapter);
+    }
+
+    @Override
+    public Converter<?, RequestBody> requestBodyConverter(Type type,
+                                                          Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
+        JsonAdapter<?> adapter = moshi.adapter(type);
+        if (lenient) {
+            adapter = adapter.lenient();
+        }
+        return new MoshiRequestBodyConverter<>(adapter);
+    }
 }

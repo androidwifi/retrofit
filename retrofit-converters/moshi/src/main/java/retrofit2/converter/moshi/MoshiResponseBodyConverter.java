@@ -16,22 +16,25 @@
 package retrofit2.converter.moshi;
 
 import com.squareup.moshi.JsonAdapter;
+
 import java.io.IOException;
+
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 
 final class MoshiResponseBodyConverter<T> implements Converter<ResponseBody, T> {
-  private final JsonAdapter<T> adapter;
+    private final JsonAdapter<T> adapter;
 
-  MoshiResponseBodyConverter(JsonAdapter<T> adapter) {
-    this.adapter = adapter;
-  }
-
-  @Override public T convert(ResponseBody value) throws IOException {
-    try {
-      return adapter.fromJson(value.source());
-    } finally {
-      value.close();
+    MoshiResponseBodyConverter(JsonAdapter<T> adapter) {
+        this.adapter = adapter;
     }
-  }
+
+    @Override
+    public T convert(ResponseBody value) throws IOException {
+        try {
+            return adapter.fromJson(value.source());
+        } finally {
+            value.close();
+        }
+    }
 }

@@ -16,11 +16,14 @@
 package retrofit2.adapter.rxjava;
 
 import java.io.IOException;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.http.GET;
@@ -33,163 +36,182 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public final class ObservableTest {
-  @Rule public final MockWebServer server = new MockWebServer();
+    @Rule
+    public final MockWebServer server = new MockWebServer();
 
-  interface Service {
-    @GET("/") Observable<String> body();
-    @GET("/") Observable<Response<String>> response();
-    @GET("/") Observable<Result<String>> result();
-  }
+    interface Service {
+        @GET("/")
+        Observable<String> body();
 
-  private Service service;
+        @GET("/")
+        Observable<Response<String>> response();
 
-  @Before public void setUp() {
-    Retrofit retrofit = new Retrofit.Builder()
-        .baseUrl(server.url("/"))
-        .addConverterFactory(new StringConverterFactory())
-        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-        .build();
-    service = retrofit.create(Service.class);
-  }
-
-  @Test public void bodySuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
-
-    BlockingObservable<String> o = service.body().toBlocking();
-    assertThat(o.first()).isEqualTo("Hi");
-  }
-
-  @Test public void bodySuccess404() {
-    server.enqueue(new MockResponse().setResponseCode(404));
-
-    BlockingObservable<String> o = service.body().toBlocking();
-    try {
-      o.first();
-      fail();
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
+        @GET("/")
+        Observable<Result<String>> result();
     }
-  }
 
-  @Test public void bodyFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    private Service service;
 
-    BlockingObservable<String> o = service.body().toBlocking();
-    try {
-      o.first();
-      fail();
-    } catch (RuntimeException e) {
-      assertThat(e.getCause()).isInstanceOf(IOException.class);
+    @Before
+    public void setUp() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(server.url("/"))
+                .addConverterFactory(new StringConverterFactory())
+                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+                .build();
+        service = retrofit.create(Service.class);
     }
-  }
 
-  @Test public void bodyRespectsBackpressure() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void bodySuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-    TestSubscriber<String> subscriber = new TestSubscriber<>(0);
-    Observable<String> o = service.body();
-
-    o.subscribe(subscriber);
-    assertThat(server.getRequestCount()).isEqualTo(0);
-
-    subscriber.requestMore(1);
-    assertThat(server.getRequestCount()).isEqualTo(1);
-
-    subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
-    assertThat(server.getRequestCount()).isEqualTo(1);
-  }
-
-  @Test public void responseSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
-
-    BlockingObservable<Response<String>> o = service.response().toBlocking();
-    Response<String> response = o.first();
-    assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isEqualTo("Hi");
-  }
-
-  @Test public void responseSuccess404() throws IOException {
-    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
-
-    BlockingObservable<Response<String>> o = service.response().toBlocking();
-    Response<String> response = o.first();
-    assertThat(response.isSuccessful()).isFalse();
-    assertThat(response.errorBody().string()).isEqualTo("Hi");
-  }
-
-  @Test public void responseFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
-
-    BlockingObservable<Response<String>> o = service.response().toBlocking();
-    try {
-      o.first();
-      fail();
-    } catch (RuntimeException t) {
-      assertThat(t.getCause()).isInstanceOf(IOException.class);
+        BlockingObservable<String> o = service.body().toBlocking();
+        assertThat(o.first()).isEqualTo("Hi");
     }
-  }
 
-  @Test public void responseRespectsBackpressure() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void bodySuccess404() {
+        server.enqueue(new MockResponse().setResponseCode(404));
 
-    TestSubscriber<Response<String>> subscriber = new TestSubscriber<>(0);
-    Observable<Response<String>> o = service.response();
+        BlockingObservable<String> o = service.body().toBlocking();
+        try {
+            o.first();
+            fail();
+        } catch (RuntimeException e) {
+            Throwable cause = e.getCause();
+            assertThat(cause).isInstanceOf(HttpException.class).hasMessage("HTTP 404 Client Error");
+        }
+    }
 
-    o.subscribe(subscriber);
-    assertThat(server.getRequestCount()).isEqualTo(0);
+    @Test
+    public void bodyFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    subscriber.requestMore(1);
-    assertThat(server.getRequestCount()).isEqualTo(1);
+        BlockingObservable<String> o = service.body().toBlocking();
+        try {
+            o.first();
+            fail();
+        } catch (RuntimeException e) {
+            assertThat(e.getCause()).isInstanceOf(IOException.class);
+        }
+    }
 
-    subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
-    assertThat(server.getRequestCount()).isEqualTo(1);
-  }
+    @Test
+    public void bodyRespectsBackpressure() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-  @Test public void resultSuccess200() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+        TestSubscriber<String> subscriber = new TestSubscriber<>(0);
+        Observable<String> o = service.body();
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.first();
-    assertThat(result.isError()).isFalse();
-    Response<String> response = result.response();
-    assertThat(response.isSuccessful()).isTrue();
-    assertThat(response.body()).isEqualTo("Hi");
-  }
+        o.subscribe(subscriber);
+        assertThat(server.getRequestCount()).isEqualTo(0);
 
-  @Test public void resultSuccess404() throws IOException {
-    server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+        subscriber.requestMore(1);
+        assertThat(server.getRequestCount()).isEqualTo(1);
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.first();
-    assertThat(result.isError()).isFalse();
-    Response<String> response = result.response();
-    assertThat(response.isSuccessful()).isFalse();
-    assertThat(response.errorBody().string()).isEqualTo("Hi");
-  }
+        subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
+        assertThat(server.getRequestCount()).isEqualTo(1);
+    }
 
-  @Test public void resultFailure() {
-    server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+    @Test
+    public void responseSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
 
-    BlockingObservable<Result<String>> o = service.result().toBlocking();
-    Result<String> result = o.first();
-    assertThat(result.isError()).isTrue();
-    assertThat(result.error()).isInstanceOf(IOException.class);
-  }
+        BlockingObservable<Response<String>> o = service.response().toBlocking();
+        Response<String> response = o.first();
+        assertThat(response.isSuccessful()).isTrue();
+        assertThat(response.body()).isEqualTo("Hi");
+    }
 
-  @Test public void resultRespectsBackpressure() {
-    server.enqueue(new MockResponse().setBody("Hi"));
+    @Test
+    public void responseSuccess404() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
 
-    TestSubscriber<Result<String>> subscriber = new TestSubscriber<>(0);
-    Observable<Result<String>> o = service.result();
+        BlockingObservable<Response<String>> o = service.response().toBlocking();
+        Response<String> response = o.first();
+        assertThat(response.isSuccessful()).isFalse();
+        assertThat(response.errorBody().string()).isEqualTo("Hi");
+    }
 
-    o.subscribe(subscriber);
-    assertThat(server.getRequestCount()).isEqualTo(0);
+    @Test
+    public void responseFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
 
-    subscriber.requestMore(1);
-    assertThat(server.getRequestCount()).isEqualTo(1);
+        BlockingObservable<Response<String>> o = service.response().toBlocking();
+        try {
+            o.first();
+            fail();
+        } catch (RuntimeException t) {
+            assertThat(t.getCause()).isInstanceOf(IOException.class);
+        }
+    }
 
-    subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
-    assertThat(server.getRequestCount()).isEqualTo(1);
-  }
+    @Test
+    public void responseRespectsBackpressure() {
+        server.enqueue(new MockResponse().setBody("Hi"));
+
+        TestSubscriber<Response<String>> subscriber = new TestSubscriber<>(0);
+        Observable<Response<String>> o = service.response();
+
+        o.subscribe(subscriber);
+        assertThat(server.getRequestCount()).isEqualTo(0);
+
+        subscriber.requestMore(1);
+        assertThat(server.getRequestCount()).isEqualTo(1);
+
+        subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
+        assertThat(server.getRequestCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void resultSuccess200() {
+        server.enqueue(new MockResponse().setBody("Hi"));
+
+        BlockingObservable<Result<String>> o = service.result().toBlocking();
+        Result<String> result = o.first();
+        assertThat(result.isError()).isFalse();
+        Response<String> response = result.response();
+        assertThat(response.isSuccessful()).isTrue();
+        assertThat(response.body()).isEqualTo("Hi");
+    }
+
+    @Test
+    public void resultSuccess404() throws IOException {
+        server.enqueue(new MockResponse().setResponseCode(404).setBody("Hi"));
+
+        BlockingObservable<Result<String>> o = service.result().toBlocking();
+        Result<String> result = o.first();
+        assertThat(result.isError()).isFalse();
+        Response<String> response = result.response();
+        assertThat(response.isSuccessful()).isFalse();
+        assertThat(response.errorBody().string()).isEqualTo("Hi");
+    }
+
+    @Test
+    public void resultFailure() {
+        server.enqueue(new MockResponse().setSocketPolicy(DISCONNECT_AFTER_REQUEST));
+
+        BlockingObservable<Result<String>> o = service.result().toBlocking();
+        Result<String> result = o.first();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.error()).isInstanceOf(IOException.class);
+    }
+
+    @Test
+    public void resultRespectsBackpressure() {
+        server.enqueue(new MockResponse().setBody("Hi"));
+
+        TestSubscriber<Result<String>> subscriber = new TestSubscriber<>(0);
+        Observable<Result<String>> o = service.result();
+
+        o.subscribe(subscriber);
+        assertThat(server.getRequestCount()).isEqualTo(0);
+
+        subscriber.requestMore(1);
+        assertThat(server.getRequestCount()).isEqualTo(1);
+
+        subscriber.requestMore(Long.MAX_VALUE); // Subsequent requests do not trigger HTTP requests.
+        assertThat(server.getRequestCount()).isEqualTo(1);
+    }
 }

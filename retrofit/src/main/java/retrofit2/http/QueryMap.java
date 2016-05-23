@@ -24,9 +24,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Query parameter keys and values appended to the URL.
- * <p>
+ * <p/>
  * Both keys and values are converted to strings using {@link String#valueOf(Object)}.
- * <p>
+ * <p/>
  * Simple Example:
  * <pre><code>
  * &#64;GET("/search")
@@ -34,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "bar", "kit", "kat"))} yields
  * {@code /search?foo=bar&kit=kat}.
- * <p>
+ * <p/>
  * Map keys and values representing parameter values are URL encoded by default. Specify
  * {@link #encoded() encoded=true} to change this behavior.
  * <pre><code>
@@ -43,7 +43,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * </code></pre>
  * Calling with {@code foo.list(ImmutableMap.of("foo", "foo+bar"))} yields
  * {@code /search?foo=foo+bar}.
- * <p>
+ * <p/>
  * A {@code null} value for the map, as a key, or as a value is not allowed.
  *
  * @see Query
@@ -52,6 +52,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(PARAMETER)
 @Retention(RUNTIME)
 public @interface QueryMap {
-  /** Specifies whether parameter names and values are already URL encoded. */
-  boolean encoded() default false;
+    /**
+     * Specifies whether parameter names and values are already URL encoded.
+     */
+    boolean encoded() default false;
 }

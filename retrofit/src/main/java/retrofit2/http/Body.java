@@ -18,6 +18,7 @@ package retrofit2.http;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
 import retrofit2.Converter;
 import retrofit2.Retrofit;
 
@@ -30,7 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * body). The object will be serialized using the {@link Retrofit Retrofit} instance
  * {@link Converter Converter} and the result will be set directly as the
  * request body.
- * <p>
+ * <p/>
  * Body parameters may not be {@code null}.
  */
 @Documented
